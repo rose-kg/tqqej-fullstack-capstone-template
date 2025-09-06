@@ -1,13 +1,25 @@
 import React, { useState } from "react";
 import "./RegisterPage.css";
+import urlConfig from '../../config/urlConfig'; // Task 1
+import { useAppContext } from '../../context/AuthContext'; // Task 2
+import { useNavigate } from 'react-router-dom'; // Task 3
 
 function RegisterPage() {
+
   const [formData, setFormData] = useState({
-    username: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+
+  // Task 4: Include a state for error message.
+  const [showerr, setShowerr] = useState("");
+  // Task 5: Create a local variable for navigate and setIsLoggedIn.
+  const navigate = useNavigate();
+  const { setIsLoggedIn } = useAppContext();
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,10 +29,47 @@ function RegisterPage() {
     }));
   };
 
+
+  const handleRegister = async () => {
+    setShowerr("");
+    if (formData.password !== formData.confirmPassword) {
+      setShowerr("Passwords do not match");
+      return;
+    }
+    try {
+      const response = await fetch(`${urlConfig}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password
+        }),
+      });
+      const json = await response.json(); // Task 1
+      if (json.authtoken) {
+        // Task 2: Set user details in session storage
+        sessionStorage.setItem('auth-token', json.authtoken);
+        sessionStorage.setItem('name', formData.firstName);
+        sessionStorage.setItem('email', json.email);
+        setIsLoggedIn(true); // Task 3
+        navigate('/app'); // Task 4
+      } else if (json.error) {
+        setShowerr(json.error); // Task 5
+      } else {
+        setShowerr('Registration failed');
+      }
+    } catch (e) {
+      setShowerr("Error fetching details: " + e.message);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Register form submitted:", formData);
-    // 👉 Later you’ll send this data to the backend API
+    handleRegister();
   };
 
   return (
@@ -28,15 +77,29 @@ function RegisterPage() {
       <div className="register-card">
         <h2 className="register-title">Create an Account</h2>
         <form onSubmit={handleSubmit}>
+          {showerr && <div className="alert alert-danger text-danger">{showerr}</div>}
+
           <div className="form-group">
-            <label>Username</label>
+            <label>First Name</label>
             <input
               type="text"
-              name="username"
-              value={formData.username}
+              name="firstName"
+              value={formData.firstName}
               onChange={handleChange}
               className="form-control"
-              placeholder="Enter your username"
+              placeholder="Enter your first name"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Last Name</label>
+            <input
+              type="text"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              className="form-control"
+              placeholder="Enter your last name"
               required
             />
           </div>
