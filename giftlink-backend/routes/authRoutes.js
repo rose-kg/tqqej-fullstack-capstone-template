@@ -87,4 +87,65 @@ router.post('/register', async (req, res) => {
   }
 });
 
+
+// Update user profile endpoint
+router.put('/update',
+  [
+    // Example validation: require firstName and lastName to be non-empty if present
+    body('firstName').optional().isString().withMessage('First name must be a string'),
+    body('lastName').optional().isString().withMessage('Last name must be a string'),
+    body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  ],
+  async (req, res) => {
+    // Task 2: Validate the input using validationResult and return appropriate message if there is an error.
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      logger.error('Validation errors in update request', errors.array());
+      return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+      // Task 3: Check if email is present in the header and throw an appropriate error message if not present.
+      const email = req.headers.email;
+      if (!email) {
+        logger.error('Email not found in the request headers');
+        return res.status(400).json({ error: "Email not found in the request headers" });
+      }
+      // Task 4: Connect to MongoDB
+      const db = await connectToDatabase();
+      const collection = db.collection("users");
+      // Task 5: find user credentials in database
+      const existingUser = await collection.findOne({ email });
+      if (!existingUser) {
+        logger.error('User not found for update');
+        return res.status(404).json({ error: 'User not found' });
+      }
+      // Prepare update fields
+      const updateFields = { ...req.body, updatedAt: new Date() };
+      // If password is being updated, hash it
+      if (updateFields.password) {
+        const salt = await bcryptjs.genSalt(10);
+        updateFields.password = await bcryptjs.hash(updateFields.password, salt);
+      }
+      // Task 6: update user credentials in database
+      const result = await collection.findOneAndUpdate(
+        { email },
+        { $set: updateFields },
+        { returnDocument: 'after' }
+      );
+      const updatedUser = result.value;
+      // Task 7: create JWT authentication using secret key from .env file
+      const payload = {
+        user: {
+          id: updatedUser._id.toString(),
+        },
+      };
+      const authtoken = jwt.sign(payload, JWT_SECRET);
+      res.json({ authtoken });
+    } catch (e) {
+      logger.error('Error in /update endpoint', e);
+      return res.status(500).send('Internal server error');
+    }
+  }
+);
+
 module.exports = router;
