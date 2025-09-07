@@ -1,4 +1,4 @@
-name: CI/CD to IBM Code Engine
+name: CI/CD Pipeline
 
 on:
   push:
@@ -18,27 +18,26 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Log in to IBM Cloud
-        run: |
-          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
-          ibmcloud login --apikey ${{ secrets.IBM_CLOUD_API_KEY }} -r us-south
-          ibmcloud target -g Default
-
       - name: Log in to IBM Cloud Container Registry
-        run: |
-          ibmcloud cr region-set us-south
-          ibmcloud cr login
+        run: echo ${{ secrets.IBM_CLOUD_API_KEY }} | docker login -u iamapikey --password-stdin us.icr.io
 
       - name: Build and Push Docker image
         run: |
           docker build -t us.icr.io/rose/giftwebsite-backend:latest .
           docker push us.icr.io/rose/giftwebsite-backend:latest
 
+      - name: Install IBM Cloud CLI
+        run: curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+
+      - name: Install Code Engine plugin
+        run: ibmcloud plugin install code-engine
+
       - name: Deploy to IBM Code Engine
         run: |
+          ibmcloud login --apikey ${{ secrets.IBM_CLOUD_API_KEY }} -r us-south
+          ibmcloud ce project select --name giftwebsite
           ibmcloud ce application update \
             --name giftwebsite-backend \
             --image us.icr.io/rose/giftwebsite-backend:latest \
-            --registry-secret icr-secret \
             --env MONGO_URL=$MONGO_URL \
             --env JWT_SECRET=$JWT_SECRET
