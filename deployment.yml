@@ -19,6 +19,9 @@ spec:
         image: us.icr.io/rose/giftwebsite-backend:latest
         ports:
         - containerPort: 3060
+        env:
+        - name: REACT_APP_BACKEND_URL
+          value: "https://giftwebsite-frontend.1zyru8ydplpd.us-south.codeengine.appdomain.cloud"
       imagePullSecrets:
       - name: icr
 ---

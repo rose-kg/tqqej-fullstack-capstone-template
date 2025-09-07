@@ -29,7 +29,7 @@ connectToDatabase().then(() => {
 app.use(express.json());
 
 // Serve static files from the React app build directory
-app.use(express.static(path.join(__dirname, '../giftlink-frontend/build')));
+app.use(express.static(path.join(__dirname, 'frontend-build')));
 
 // Route files
 // Gift API Task 1: import the giftRoutes and store in a constant called giftroutes
@@ -64,7 +64,7 @@ app.use((err, req, res, next) => {
 
 // Catch all handler: send back React's index.html file for any non-API routes
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../giftlink-frontend/build/index.html'));
+    res.sendFile(path.join(__dirname, 'frontend-build/index.html'));
 });
 
 app.listen(port, () => {
