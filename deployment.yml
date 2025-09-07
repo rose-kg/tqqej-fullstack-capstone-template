@@ -21,7 +21,7 @@ spec:
         - containerPort: 3060
         env:
         - name: REACT_APP_BACKEND_URL
-          value: "https://giftwebsite-frontend.1zyru8ydplpd.us-south.codeengine.appdomain.cloud"
+          value: "https://mycluster-820778-310dfbeb176518568071f813b4831a07-0000.us-south.containers.appdomain.cloud"
       imagePullSecrets:
       - name: icr
 ---
