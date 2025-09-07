@@ -21,14 +21,19 @@ jobs:
       - name: Log in to IBM Cloud Container Registry
         run: echo ${{ secrets.IBM_CLOUD_API_KEY }} | docker login -u iamapikey --password-stdin us.icr.io
 
+      - name: Install IBM Cloud CLI
+        run: curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+
+      - name: Clean up old images (optional)
+        run: |
+          # Try to delete old images to free up quota space
+          ibmcloud cr image-rm us.icr.io/rose/giftwebsite-backend:latest || echo "No old images to clean up"
+
       - name: Build and Push Docker image
         working-directory: ./giftlink-backend
         run: |
           docker build -t us.icr.io/rose/giftwebsite-backend:latest .
           docker push us.icr.io/rose/giftwebsite-backend:latest
-
-      - name: Install IBM Cloud CLI
-        run: curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
 
       - name: Install Kubernetes Service plugin
         run: ibmcloud plugin install kubernetes-service
