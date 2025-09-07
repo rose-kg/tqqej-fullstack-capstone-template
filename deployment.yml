@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: giftapp-container
-        image: us.icr.io/frontend1/giftapp
+        image: us.icr.io/rose/giftapp:latest
         ports:
         - containerPort: 3060
       imagePullSecrets:

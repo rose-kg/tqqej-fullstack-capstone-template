@@ -11,25 +11,25 @@ function DetailsPage() {
   const [comments, setComments] = useState([]);
   const [error, setError] = useState("");
 
-  // ✅ Task 1: Check authentication
-  useEffect(() => {
-    const token = sessionStorage.getItem("token");
-    if (!token) {
-      navigate("/app/login");
-    }
-  }, [navigate]);
-
   // ✅ Task 2 & 3: Fetch gift details + scroll to top
   useEffect(() => {
     const fetchGiftDetails = async () => {
       try {
         const response = await fetch(
-          `${urlConfig.backendUrl}/api/gifts/${productId}`
+          `${urlConfig.backendUrl}/api/gifts/${productId}`, { cache: 'no-cache' }
         );
         if (!response.ok) {
-          throw new Error("Failed to fetch gift details");
+          if (response.status === 404) {
+            setError('Gift not found');
+            return;
+          }
+          throw new Error(`HTTP error: ${response.status}`);
         }
         const data = await response.json();
+        if (data.error) {
+          setError(data.error);
+          return;
+        }
         setGift(data);
         setComments(data.comments || []);
       } catch (err) {

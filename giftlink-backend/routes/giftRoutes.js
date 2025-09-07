@@ -24,7 +24,7 @@ router.get('/:id', async (req, res) => {
         const collection = db.collection('gifts');
          const { id } = req.params;
         const gift = await collection.findOne({ id: id });
-        if (!gift) return res.status(404).send('Gift not found');
+        if (!gift) return res.status(200).json({ error: 'Gift not found' });
 
         // Task 2: use the collection() method to retrieve the gift collection
         // {{insert code here}}

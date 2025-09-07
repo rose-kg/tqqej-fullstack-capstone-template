@@ -1,3 +1,18 @@
+const express = require('express');
+const bcryptjs = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
+const connectToDatabase = require('../models/db');
+const dotenv = require('dotenv');
+const pino = require('pino');
+
+// Step 1 - Task 3: Create a Pino logger instance
+const logger = pino();
+
+dotenv.config();
+
+const router = express.Router();
+
 router.post('/login', async (req, res) => {
   try {
     // Task 1: Connect to `giftsdb` in MongoDB through `connectToDatabase` in `db.js`.
@@ -22,7 +37,7 @@ router.post('/login', async (req, res) => {
           id: theUser._id.toString(),
         },
       };
-      const authtoken = jwt.sign(payload, JWT_SECRET);
+      const authtoken = jwt.sign(payload, process.env.JWT_SECRET);
       res.json({ authtoken, userName, userEmail });
     } else {
       // Task 7: Send appropriate message if user not found
@@ -30,26 +45,9 @@ router.post('/login', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
   } catch (e) {
-    return res.status(500).send('Internal server error');
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
-// Step 1 - Task 2: Import necessary packages
-const express = require('express');
-const app = express();
-const bcryptjs = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { body, validationResult } = require('express-validator');
-const connectToDatabase = require('../models/db');
-const router = express.Router();
-const dotenv = require('dotenv');
-const pino = require('pino');  
-
-// Step 1 - Task 3: Create a Pino logger instance
-const logger = pino();
-
-dotenv.config();
-// Step 1 - Task 4: Create JWT secret
-const JWT_SECRET = process.env.JWT_SECRET;
 
 router.post('/register', async (req, res) => {
   try {
@@ -79,11 +77,11 @@ router.post('/register', async (req, res) => {
         id: newUser.insertedId,
       },
     };
-    const authtoken = jwt.sign(payload, JWT_SECRET);
+    const authtoken = jwt.sign(payload, process.env.JWT_SECRET);
     logger.info('User registered successfully');
     res.json({ authtoken, email });
   } catch (e) {
-    return res.status(500).send('Internal server error');
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -139,11 +137,11 @@ router.put('/update',
           id: updatedUser._id.toString(),
         },
       };
-      const authtoken = jwt.sign(payload, JWT_SECRET);
+      const authtoken = jwt.sign(payload, process.env.JWT_SECRET);
       res.json({ authtoken });
     } catch (e) {
       logger.error('Error in /update endpoint', e);
-      return res.status(500).send('Internal server error');
+      return res.status(500).json({ error: 'Internal server error' });
     }
   }
 );
